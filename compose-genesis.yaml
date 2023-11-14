@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  ethereum-genesis-generator:
+    image: wangyufsn/ethereum-genesis-generator:2.0.4
+    command: all
+    volumes:
+      - ./output:/data
+      - ./config-example:/config
+    tty: true
+    stdin_open: true
+    restart: "no"
+    
