@@ -42,7 +42,6 @@ services:
       - "8551:8551" # Map Auth RPC port from container to host
       - "9001:9001" # Map metrics port from container to host
     restart: unless-stopped
-    network_mode: host
 
   lighthouse-beacon-1:
     image: sigp/lighthouse:v4.5.0
@@ -64,7 +63,7 @@ services:
       - --http-allow-sync-stalled
       - --slots-per-restore-point=32
       - --disable-packet-filter
-      - --execution-endpoints=http://127.0.0.1:8551
+      - --execution-endpoints=http://geth-1:8551
       - --jwt-secrets=/output/jwt/jwtsecret
       - --suggested-fee-recipient=0x8943545177806ED17B9F23F0a21ee5948eCaa776
       - --subscribe-all-subnets
@@ -83,7 +82,6 @@ services:
     depends_on:
       - geth-1
     restart: unless-stopped
-    network_mode: host
 
   lighthouse-validator-1:
     image: sigp/lighthouse:v4.5.0
@@ -99,7 +97,7 @@ services:
       - --unencrypted-http-transport
       - --http-address=0.0.0.0
       - --http-port=5042
-      - --beacon-nodes=http://127.0.0.1:4000
+      - --beacon-nodes=http://lighthouse-beacon-1:4000
       - --suggested-fee-recipient=0x8943545177806ED17B9F23F0a21ee5948eCaa776
       - --metrics
       - --metrics-address=0.0.0.0
@@ -114,6 +112,4 @@ services:
     depends_on:
       - lighthouse-beacon-1
     restart: unless-stopped
-    network_mode: host
-
 
