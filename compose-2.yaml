@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  geth-1:
+  geth-2:
     image: ethereum/client-go:v1.13.4
     entrypoint: /geth-init.sh
     command:
@@ -21,7 +21,7 @@ services:
       - --ws.api=admin,engine,net,eth,web3,debug
       - --ws.origins=*
       - --allow-insecure-unlock
-      - --nat=extip:172.21.0.2
+      - --nat=extip:172.21.0.4
       - --verbosity=3
       - --authrpc.port=8551
       - --authrpc.addr=0.0.0.0
@@ -32,18 +32,19 @@ services:
       - --metrics
       - --metrics.addr=0.0.0.0
       - --metrics.port=9001
+      - --bootnodes=enode://a14c3c85328e0ea9afe864582a5eb1169de763f606b3841413e85a688727e81361a7dffc1e2b316765ae7df0f2c867fd58ebc373497a13c47f3193c9241fa1c4@172.21.0.2:30303
     volumes:
-      - ./execution-data-1:/execution-data
+      - ./execution-data-2:/execution-data
       - ./output:/output
       - ./entrypoint/geth-init.sh:/geth-init.sh
     ports:
-      - "8545:8545" # Map HTTP RPC port from container to host
-      - "8546:8546" # Map WebSocket RPC port from container to host
-      - "8551:8551" # Map Auth RPC port from container to host
-      - "9001:9001" # Map metrics port from container to host
+      - "9545:8545" # Map HTTP RPC port from container to host
+      - "9546:8546" # Map WebSocket RPC port from container to host
+      - "9551:8551" # Map Auth RPC port from container to host
+      - "10001:9001" # Map metrics port from container to host
     restart: unless-stopped
 
-  lighthouse-beacon-1:
+  lighthouse-beacon-2:
     image: sigp/lighthouse:v4.5.0
     command:
       - lighthouse
@@ -52,7 +53,7 @@ services:
       - --datadir=/consensus-data
       - --testnet-dir=/output/custom_config_data
       - --disable-enr-auto-update
-      - --enr-address=172.21.0.3
+      - --enr-address=172.21.0.5
       - --enr-udp-port=9000
       - --enr-tcp-port=9000
       - --listen-address=0.0.0.0
@@ -63,7 +64,7 @@ services:
       - --http-allow-sync-stalled
       - --slots-per-restore-point=32
       - --disable-packet-filter
-      - --execution-endpoints=http://geth-1:8551
+      - --execution-endpoints=http://geth-2:8551
       - --jwt-secrets=/output/jwt/jwtsecret
       - --suggested-fee-recipient=0x8943545177806ED17B9F23F0a21ee5948eCaa776
       - --subscribe-all-subnets
@@ -71,33 +72,35 @@ services:
       - --metrics-address=0.0.0.0
       - --metrics-allow-origin=*
       - --metrics-port=5054
+      - --boot-nodes=enr:-MW4QN3iBMCQ3kBRYZVAa216E2NheL13D4Daxi-mVDja-z-uFJFFA-m_NhhoV2Eryc3rpIwrnaWhyFF9xbpFukEW3ByB0odhdHRuZXRziAAAAAAAAAAAhGV0aDKQI75MIEAAADj__________4JpZIJ2NIJpcISsFQADhHF1aWOCIymJc2VjcDI1NmsxoQNR89h4WcmKGgXKMtoYpz9IMfJoUprUol149mhDcI6JTIhzeW5jbmV0cwCDdGNwgiMog3VkcIIjKA
+      - --trusted-peers=16Uiu2HAmJAu2qK5wM5pBRpzLP3XZ9yVsFo9fxHpfM68Pjh2PiZwh
     volumes:
-      - ./consensus-data-1:/consensus-data # Maps the local 'consensus-data' directory to the container's 'datadir'
+      - ./consensus-data-2:/consensus-data # Maps the local 'consensus-data' directory to the container's 'datadir'
       - ./output:/output # Maps the local 'output' directory to the container
     ports:
-      - "9000:9000/udp" # ENR UDP port mapping
-      - "9000:9000/tcp" # ENR TCP port mapping
-      - "4000:4000" # HTTP port mapping
-      - "5054:5054" # Metrics port mapping
+      - "10000:9000/udp" # ENR UDP port mapping
+      - "10000:9000/tcp" # ENR TCP port mapping
+      - "4100:4000" # HTTP port mapping
+      - "6054:5054" # Metrics port mapping
     depends_on:
-      - geth-1
+      - geth-2
     restart: unless-stopped
 
-  # lighthouse-validator-1:
+  # lighthouse-validator-2:
   #   image: sigp/lighthouse:v4.5.0
   #   command:
   #     - lighthouse
   #     - validator_client
   #     - --debug-level=info
   #     - --testnet-dir=/output/custom_config_data
-  #     - --validators-dir=/validator-keys/node-0-keystores/keys
-  #     - --secrets-dir=/validator-keys/node-0-keystores/secrets
+  #     - --validators-dir=/validator-keys/node-1-keystores/keys
+  #     - --secrets-dir=/validator-keys/node-1-keystores/secrets
   #     - --init-slashing-protection
   #     - --http
   #     - --unencrypted-http-transport
   #     - --http-address=0.0.0.0
   #     - --http-port=5042
-  #     - --beacon-nodes=http://lighthouse-beacon-1:4000
+  #     - --beacon-nodes=http://lighthouse-beacon-2:4000
   #     - --suggested-fee-recipient=0x8943545177806ED17B9F23F0a21ee5948eCaa776
   #     - --metrics
   #     - --metrics-address=0.0.0.0
@@ -107,9 +110,9 @@ services:
   #     - ./output:/output
   #     - ./validator-keys:/validator-keys
   #   ports:
-  #     - "5042:5042" # Expose HTTP port for the validator client
-  #     - "5064:5064" # Expose metrics port for the validator client
+  #     - "6042:5042" # Expose HTTP port for the validator client
+  #     - "6064:5064" # Expose metrics port for the validator client
   #   depends_on:
-  #     - lighthouse-beacon-1
+  #     - lighthouse-beacon-2
   #   restart: unless-stopped
 

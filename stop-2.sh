@@ -1,0 +1,1 @@
+docker compose -f compose-2.yaml stop
